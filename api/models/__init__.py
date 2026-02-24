@@ -10,6 +10,7 @@ from api.models.study_plan import StudyPlan, PlanTask
 from api.models.review import SpacedRepetitionCard
 from api.models.exam_blueprint import ExamBlueprint, ExamTopicWeight
 from api.models.rewards import PointLedger, Achievement, RewardsProfile
+from api.models.auth_token import AuthToken
 
 __all__ = [
     "Base",
@@ -30,4 +31,5 @@ __all__ = [
     "PointLedger",
     "Achievement",
     "RewardsProfile",
+    "AuthToken",
 ]

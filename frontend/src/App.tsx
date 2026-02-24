@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Toaster } from "sonner";
 import Layout from "@/components/common/Layout";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import TutorialModal from "@/components/common/TutorialModal";
 import { TutorialProvider } from "@/context/TutorialContext";
+import { useAuth } from "@/context/AuthContext";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const DocumentsPage = lazy(() => import("@/pages/DocumentsPage"));
@@ -27,6 +28,19 @@ const RegisterPage = lazy(() => import("@/pages/RegisterPage"));
 const PricingPage = lazy(() => import("@/pages/PricingPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const RewardsPage = lazy(() => import("@/pages/RewardsPage"));
+const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage"));
+const ConfirmEmailChangePage = lazy(() => import("@/pages/ConfirmEmailChangePage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin, isLoading } = useAuth();
+  if (isLoading) return <Loading />;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
 
 function Loading() {
   return (
@@ -54,6 +68,10 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/confirm-email-change" element={<ConfirmEmailChangePage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/*" element={
               <ProtectedRoute>
                 <Layout>
@@ -71,6 +89,12 @@ export default function App() {
                   <Route path="/subjects/:subject" element={<SubjectDetailPage />} />
                   <Route path="/exam" element={<ExamSimulatorPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/admin" element={
+                    <AdminRoute>
+                      <AdminPage />
+                    </AdminRoute>
+                  } />
                   <Route path="/rewards" element={<RewardsPage />} />
                   </Routes>
                 </Layout>

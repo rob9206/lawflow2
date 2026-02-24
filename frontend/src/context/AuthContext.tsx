@@ -28,11 +28,13 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isPro: boolean;
+  isAdmin: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName?: string) => Promise<void>;
   logout: () => void;
   refreshSession: () => Promise<boolean>;
+  refreshUser: () => Promise<void>;
   updateProfile: (payload: { display_name?: string; avatar_url?: string; bio?: string }) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -158,21 +160,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const me = await getMe();
+    const refreshToken = getRefreshToken();
+    const accessToken = getAccessToken();
+    if (refreshToken && accessToken) {
+      saveAuthSession({
+        accessToken,
+        refreshToken,
+        user: me,
+      });
+    }
+    setUser(me);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isAuthenticated: Boolean(user),
       isPro: (user?.tier ?? "free") === "pro",
+      isAdmin: Boolean(user?.is_admin),
       isLoading,
       login,
       register,
       logout,
       refreshSession,
+      refreshUser,
       updateProfile,
       uploadAvatar,
       changePassword: updatePassword,
     }),
-    [user, isLoading, login, register, logout, refreshSession, updateProfile, uploadAvatar, updatePassword]
+    [user, isLoading, login, register, logout, refreshSession, refreshUser, updateProfile, uploadAvatar, updatePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -37,6 +37,16 @@ class Config:
     STRIPE_PRO_PRICE_ID: str = field(default_factory=lambda: os.getenv("STRIPE_PRO_PRICE_ID", ""))
     APP_BASE_URL: str = field(default_factory=lambda: os.getenv("APP_BASE_URL", "http://localhost:5173"))
 
+    # Email / account lifecycle
+    RESEND_API_KEY: str = field(default_factory=lambda: os.getenv("RESEND_API_KEY", ""))
+    FROM_EMAIL: str = field(default_factory=lambda: os.getenv("FROM_EMAIL", "noreply@yourdomain.com"))
+    EMAIL_TOKEN_TTL_MINUTES: int = field(default_factory=lambda: int(os.getenv("EMAIL_TOKEN_TTL_MINUTES", "60")))
+
+    # Security / limiting
+    LIMITER_STORAGE_URI: str = field(default_factory=lambda: os.getenv("LIMITER_STORAGE_URI", ""))
+    ADMIN_EMAIL: str = field(default_factory=lambda: os.getenv("ADMIN_EMAIL", ""))
+    ADMIN_PASSWORD: str = field(default_factory=lambda: os.getenv("ADMIN_PASSWORD", ""))
+
     # Storage
     UPLOAD_DIR: str = field(default_factory=lambda: os.getenv("UPLOAD_DIR", "data/uploads"))
     PROCESSED_DIR: str = field(default_factory=lambda: os.getenv("PROCESSED_DIR", "data/processed"))

@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, String
+from sqlalchemy import Boolean, Column, DateTime, String
 
 from api.models.base import Base
 
@@ -30,7 +30,15 @@ class User(Base):
     tier = Column(String, default="free")  # free | pro
     stripe_customer_id = Column(String, unique=True)
     stripe_subscription_id = Column(String)
-    subscription_status = Column(String, default="none")  # none | active | past_due | canceled
+    subscription_status = Column(
+        String,
+        default="none",
+    )  # none | active | past_due | canceled
+
+    # Account security / administration
+    email_verified = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
 
     created_at = Column(DateTime, default=_now)
     updated_at = Column(DateTime, default=_now, onupdate=_now)
@@ -44,6 +52,13 @@ class User(Base):
             "bio": self.bio or "",
             "tier": self.tier,
             "subscription_status": self.subscription_status,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "email_verified": bool(self.email_verified),
+            "is_admin": bool(self.is_admin),
+            "is_active": bool(self.is_active),
+            "created_at": (
+                self.created_at.isoformat() if self.created_at else None
+            ),
+            "updated_at": (
+                self.updated_at.isoformat() if self.updated_at else None
+            ),
         }

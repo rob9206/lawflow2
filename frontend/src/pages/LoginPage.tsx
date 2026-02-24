@@ -52,8 +52,9 @@ export default function LoginPage() {
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="duo-label">Email</label>
+            <label className="duo-label" htmlFor="login_email">Email</label>
             <input
+              id="login_email"
               className="duo-input w-full"
               type="email"
               value={email}
@@ -73,7 +74,7 @@ export default function LoginPage() {
           </div>
           <div style={{ textAlign: "right", marginTop: "-8px" }}>
             <Link
-              to="#"
+              to="/forgot-password"
               style={{
                 fontSize: "12px",
                 fontWeight: 600,

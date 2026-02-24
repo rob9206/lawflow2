@@ -61,3 +61,52 @@ export async function changePassword(payload: {
   const { data } = await api.post("/auth/change-password", payload);
   return data;
 }
+
+export async function sendVerification(): Promise<{ status: string }> {
+  const { data } = await api.post("/auth/send-verification");
+  return data;
+}
+
+export async function verifyEmail(payload: {
+  token: string;
+}): Promise<{ status: string }> {
+  const { data } = await api.post("/auth/verify-email", payload);
+  return data;
+}
+
+export async function forgotPassword(payload: {
+  email: string;
+}): Promise<{ status: string; message: string }> {
+  const { data } = await api.post("/auth/forgot-password", payload);
+  return data;
+}
+
+export async function resetPassword(payload: {
+  token: string;
+  new_password: string;
+}): Promise<{ status: string }> {
+  const { data } = await api.post("/auth/reset-password", payload);
+  return data;
+}
+
+export async function changeEmail(payload: {
+  current_password: string;
+  new_email: string;
+}): Promise<{ status: string }> {
+  const { data } = await api.post("/auth/change-email", payload);
+  return data;
+}
+
+export async function confirmEmailChange(payload: {
+  token: string;
+}): Promise<{ status: string }> {
+  const { data } = await api.post("/auth/confirm-email-change", payload);
+  return data;
+}
+
+export async function deleteAccount(payload: {
+  current_password: string;
+}): Promise<{ status: string }> {
+  const { data } = await api.post("/auth/delete-account", payload);
+  return data;
+}

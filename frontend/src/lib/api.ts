@@ -53,6 +53,9 @@ async function refreshAccessToken(): Promise<string> {
             bio: string;
             tier: "free" | "pro";
             subscription_status: string;
+            email_verified: boolean;
+            is_admin: boolean;
+            is_active: boolean;
             created_at: string | null;
             updated_at: string | null;
           };

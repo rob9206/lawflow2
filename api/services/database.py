@@ -3,6 +3,7 @@
 import logging
 import os
 from contextlib import contextmanager
+from typing import Iterator
 
 from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import sessionmaker, Session
@@ -36,7 +37,7 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 
 @contextmanager
-def get_db() -> Session:
+def get_db() -> Iterator[Session]:
     """Yield a database session with auto-commit/rollback."""
     session = SessionLocal()
     try:
@@ -71,6 +72,27 @@ def _migrate_missing_columns():
                     stmt = f"ALTER TABLE {table_name} ADD COLUMN {col.name} {col_type}"
                     logger.info("Migrating: %s", stmt)
                     conn.execute(text(stmt))
+
+        # Backfill newly-added user security fields for existing accounts.
+        if insp.has_table("users"):
+            conn.execute(
+                text(
+                    "UPDATE users SET email_verified = 1 "
+                    "WHERE email_verified IS NULL"
+                )
+            )
+            conn.execute(
+                text(
+                    "UPDATE users SET is_active = 1 "
+                    "WHERE is_active IS NULL"
+                )
+            )
+            conn.execute(
+                text(
+                    "UPDATE users SET is_admin = 0 "
+                    "WHERE is_admin IS NULL"
+                )
+            )
 
 
 _init_done = False

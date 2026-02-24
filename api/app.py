@@ -4,13 +4,72 @@ import logging
 import os
 from pathlib import Path
 
+import bcrypt
+import click
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
 from api.config import config
 from api.errors import APIError
+from api.services.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
+
+
+def _hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def _seed_initial_admin() -> None:
+    from api.models.user import User
+    from api.services.database import get_db
+
+    admin_email = (config.ADMIN_EMAIL or "").strip().lower()
+    admin_password = config.ADMIN_PASSWORD or ""
+    if not admin_email:
+        return
+
+    with get_db() as db:
+        existing_admin = db.query(User).filter_by(is_admin=True).first()
+        if existing_admin:
+            if admin_password:
+                logger.warning(
+                    "ADMIN_PASSWORD is still set even though an admin exists. "
+                    "Remove ADMIN_PASSWORD from environment variables."
+                )
+            return
+
+        if not admin_password:
+            logger.warning(
+                "ADMIN_EMAIL is set but ADMIN_PASSWORD is missing; "
+                "skipping admin bootstrap."
+            )
+            return
+
+        user = db.query(User).filter_by(email=admin_email).first()
+        if user:
+            user.is_admin = True
+            user.is_active = True
+            user.email_verified = True
+            logger.info("Promoted existing user to admin: %s", admin_email)
+        else:
+            db.add(
+                User(
+                    email=admin_email,
+                    password_hash=_hash_password(admin_password),
+                    display_name="Admin",
+                    tier="pro",
+                    subscription_status="active",
+                    is_admin=True,
+                    is_active=True,
+                    email_verified=True,
+                )
+            )
+            logger.info("Admin user created via bootstrap: %s", admin_email)
+
+        logger.warning(
+            "Remove ADMIN_PASSWORD from environment variables after bootstrap."
+        )
 
 
 def create_app(static_dir: str | None = None) -> Flask:
@@ -43,6 +102,7 @@ def create_app(static_dir: str | None = None) -> Flask:
 
     CORS(app, origins=allowed_origins,
          expose_headers=["X-Session-Id", "X-Tutor-Mode", "X-Topic"])
+    limiter.init_app(app)
 
     from api.middleware.auth import get_current_user_id, login_required
 
@@ -89,6 +149,7 @@ def create_app(static_dir: str | None = None) -> Flask:
     from api.routes.exam import bp as exam_bp
     from api.routes.profile import bp as profile_bp
     from api.routes.rewards import bp as rewards_bp
+    from api.routes.admin import bp as admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(billing_bp)
@@ -101,6 +162,22 @@ def create_app(static_dir: str | None = None) -> Flask:
     app.register_blueprint(exam_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(rewards_bp)
+    app.register_blueprint(admin_bp)
+
+    @app.cli.command("rotate-admin-password")
+    @click.option("--email", required=True, help="Admin email address")
+    @click.password_option("--password", confirmation_prompt=True)
+    def rotate_admin_password(email: str, password: str) -> None:
+        from api.models.user import User
+        from api.services.database import get_db
+
+        target_email = (email or "").strip().lower()
+        with get_db() as db:
+            user = db.query(User).filter_by(email=target_email).first()
+            if not user or not bool(user.is_admin):
+                raise click.ClickException("Admin user not found")
+            user.password_hash = _hash_password(password)
+        click.echo(f"Updated password for admin {target_email}")
 
     if resolved_static_dir:
         @app.route("/", defaults={"path": ""})
@@ -118,6 +195,7 @@ def create_app(static_dir: str | None = None) -> Flask:
     with app.app_context():
         from api.services.database import init_database
         init_database()
+        _seed_initial_admin()
 
     return app
 

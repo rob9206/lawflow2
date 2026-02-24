@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { User, BookOpen, Target, Clock, GraduationCap, FileText, AlertTriangle, RotateCcw, Trash2, Camera } from "lucide-react";
+import { sendVerification } from "@/api/auth";
 import { getProfileStats, resetProgress, resetAll } from "@/api/profile";
 import StatCard from "@/components/ui/StatCard";
 import PageHeader from "@/components/ui/PageHeader";
@@ -21,6 +23,7 @@ export default function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["profile-stats"],
@@ -110,6 +113,19 @@ export default function ProfilePage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setIsResendingVerification(true);
+    setProfileMessage("");
+    try {
+      await sendVerification();
+      setProfileMessage("Verification email sent.");
+    } catch {
+      setProfileMessage("Unable to send verification email right now.");
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -133,6 +149,25 @@ export default function ProfilePage() {
 
       {/* Profile Header */}
       <div className="duo-card p-5">
+        {!user?.email_verified && (
+          <div
+            className="duo-card p-3 mb-4"
+            style={{ backgroundColor: "var(--orange-bg)", borderColor: "var(--orange)" }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                Your email is not verified.
+              </p>
+              <button
+                className="duo-btn duo-btn-outline"
+                onClick={handleResendVerification}
+                disabled={isResendingVerification}
+              >
+                {isResendingVerification ? "Sending..." : "Resend verification"}
+              </button>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -212,6 +247,11 @@ export default function ProfilePage() {
           >
             {isSavingProfile ? "Saving..." : "Save Profile"}
           </button>
+        </div>
+        <div className="mt-3">
+          <Link to="/settings" style={{ color: "var(--blue)", fontWeight: 700, fontSize: 14 }}>
+            Open account settings →
+          </Link>
         </div>
       </div>
 

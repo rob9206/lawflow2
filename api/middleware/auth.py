@@ -7,7 +7,7 @@ import jwt
 from flask import g, has_request_context, request
 
 from api.config import config
-from api.errors import UnauthorizedError
+from api.errors import ForbiddenError, UnauthorizedError
 from api.models.user import User
 from api.services.database import get_db
 
@@ -99,9 +99,22 @@ def login_required(fn):
             user = db.query(User).filter_by(id=user_id).first()
             if not user:
                 raise UnauthorizedError("User not found")
+            if user.is_active is False:
+                raise UnauthorizedError("Account is deactivated")
             g.current_user = user
             g.current_user_id = user.id
 
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        user = get_current_user()
+        if not user or not bool(user.is_admin):
+            raise ForbiddenError("Admin access required")
         return fn(*args, **kwargs)
 
     return wrapper
