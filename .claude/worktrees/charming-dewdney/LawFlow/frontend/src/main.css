@@ -1,0 +1,347 @@
+@import "./styles/duo-tokens.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Nunito", system-ui, -apple-system, sans-serif;
+  --color-primary: #58CC02;
+  --color-primary-hover: #46A302;
+  --color-success: #58CC02;
+  --color-warning: #FF9600;
+  --color-danger: #FF4B4B;
+}
+
+body {
+  font-family: "Nunito", system-ui, -apple-system, sans-serif;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Duolingo 3D Card ──────────────────────────────── */
+.duo-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-bottom: 4px solid var(--border-dark);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── 3D Button base ────────────────────────────────── */
+.duo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-family: "Nunito", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.08s;
+  -webkit-tap-highlight-color: transparent;
+}
+.duo-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+.duo-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.duo-btn-green {
+  background: var(--green);
+  border-bottom: 4px solid var(--green-dark);
+  color: var(--text-inverse);
+}
+.duo-btn-green:hover:not(:disabled) { background: #4FBD02; }
+
+.duo-btn-blue {
+  background: var(--blue);
+  border-bottom: 4px solid var(--blue-dark);
+  color: var(--text-inverse);
+}
+.duo-btn-blue:hover:not(:disabled) { background: #18A0E0; }
+
+.duo-btn-red {
+  background: var(--red);
+  border-bottom: 4px solid var(--red-dark);
+  color: var(--text-inverse);
+}
+.duo-btn-red:hover:not(:disabled) { background: #E83E3E; }
+
+.duo-btn-orange {
+  background: var(--orange);
+  border-bottom: 4px solid var(--orange-dark);
+  color: var(--text-inverse);
+}
+.duo-btn-orange:hover:not(:disabled) { background: #E88A00; }
+
+.duo-btn-outline {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-bottom: 4px solid var(--border-dark);
+  color: var(--text-primary);
+}
+.duo-btn-outline:hover:not(:disabled) { background: var(--surface-bg); }
+
+.duo-btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  border-bottom: none;
+}
+.duo-btn-ghost:hover { color: var(--text-primary); }
+.duo-btn-ghost:active { transform: none; }
+
+.duo-btn-disabled {
+  background: var(--surface-bg);
+  border-bottom: 4px solid var(--border);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* ── Inputs ──────────────────────────────────────── */
+.duo-input {
+  width: 100%;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: "Nunito", sans-serif;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.duo-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-bg);
+}
+.duo-input::placeholder { color: var(--text-muted); }
+.duo-input-error {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-bg);
+}
+
+/* ── Labels ──────────────────────────────────────── */
+.duo-label {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* ── Badges ──────────────────────────────────────── */
+.duo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface-bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.duo-badge-green  { background: var(--green);  color: white; font-weight: 800; border-color: var(--green); }
+.duo-badge-blue   { background: var(--blue);   color: white; border-color: var(--blue); }
+.duo-badge-orange { background: var(--orange); color: white; border-color: var(--orange); }
+.duo-badge-red    { background: var(--red);    color: white; border-color: var(--red); }
+.duo-badge-gold   { background: var(--gold);   color: var(--text-primary); border-color: var(--gold); }
+.duo-badge-navy   { background: var(--navy);   color: white; border-color: var(--navy); }
+.duo-badge-purple { background: var(--purple); color: white; border-color: var(--purple); }
+
+.duo-section-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: white;
+}
+
+/* ── Progress Bars ───────────────────────────────── */
+.duo-progress-track {
+  height: 12px;
+  background: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.duo-progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+/* ── Animations ────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up    { animation: fadeUp 0.25s ease both; }
+.animate-fade-in    { animation: fadeIn 0.2s ease both; }
+.animate-scale-in   { animation: scaleIn 0.2s ease both; }
+.animate-slide-down { animation: slideDown 0.2s ease both; }
+
+/* ── Focus ring (accessible) ───────────────────────── */
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--surface-bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Mobile sidebar overlay ──────────────────────── */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Markdown prose in tutor messages ───────────── */
+.prose-tutor {
+  line-height: 1.65;
+  font-size: 15px;
+  font-family: "Nunito", sans-serif;
+}
+.prose-tutor p {
+  margin: 0.5rem 0;
+  line-height: 1.65;
+}
+.prose-tutor p:first-child { margin-top: 0; }
+.prose-tutor p:last-child { margin-bottom: 0; }
+.prose-tutor h1 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+  color: var(--text-primary);
+}
+.prose-tutor h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 0.85rem;
+  margin-bottom: 0.35rem;
+  color: var(--text-primary);
+}
+.prose-tutor h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 0.7rem;
+  margin-bottom: 0.3rem;
+  color: var(--text-primary);
+}
+.prose-tutor strong { font-weight: 700; }
+.prose-tutor ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+.prose-tutor ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+.prose-tutor li { margin: 0.25rem 0; }
+.prose-tutor code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  background-color: var(--surface-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
+}
+.prose-tutor pre {
+  margin: 0.75rem 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-bg);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+.prose-tutor pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.prose-tutor blockquote {
+  margin: 0.75rem 0;
+  padding-left: 0.8rem;
+  border-left: 3px solid var(--blue);
+  color: var(--text-secondary);
+}
+.prose-tutor hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.9rem 0;
+}
+.prose-tutor a {
+  color: var(--blue-dark);
+  text-decoration: underline;
+}
+
+/* ── Achievement rarity tiers ────────────────────── */
+.rarity-common     { --rarity-color: var(--text-secondary); border-color: var(--rarity-color); }
+.rarity-uncommon   { --rarity-color: var(--green); border-color: var(--rarity-color); }
+.rarity-rare       { --rarity-color: var(--blue); border-color: var(--rarity-color); }
+.rarity-legendary  { --rarity-color: var(--gold); border-color: var(--rarity-color); }
+.rarity-accent     { background-color: var(--rarity-color); }
+
+/* ── Card flip animation for flashcards ──────────── */
+.flip-card {
+  perspective: 1000px;
+}
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-card-back {
+  transform: rotateY(180deg);
+}
