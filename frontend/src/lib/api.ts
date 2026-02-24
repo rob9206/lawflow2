@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getStoredApiKey } from "@/lib/apiKey";
+import { PRO_MONTHLY_PRICE } from "@/constants/pricing";
 import {
   clearAuthSession,
   getAccessToken,
@@ -8,7 +8,16 @@ import {
   saveAuthSession,
 } from "@/lib/authStorage";
 
-const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/$/, "");
+const rawApiUrl = import.meta.env.VITE_API_URL ?? "/api";
+// Avoid using localhost/127.0.0.1 when app is served from another origin (e.g. Vercel)
+const isLocalHost =
+  typeof rawApiUrl === "string" &&
+  (rawApiUrl.startsWith("http://127.0.0.1") || rawApiUrl.startsWith("http://localhost"));
+const isDifferentOrigin =
+  typeof window !== "undefined" &&
+  !window.location.hostname.includes("localhost") &&
+  window.location.hostname !== "127.0.0.1";
+const apiBaseUrl = (isLocalHost && isDifferentOrigin ? "/api" : rawApiUrl).replace(/\/$/, "");
 
 const api = axios.create({
   baseURL: apiBaseUrl,
@@ -41,8 +50,11 @@ async function refreshAccessToken(): Promise<string> {
             email: string;
             display_name: string;
             avatar_url: string | null;
+            bio: string;
             tier: "free" | "pro";
             subscription_status: string;
+            created_at: string | null;
+            updated_at: string | null;
           };
         };
         saveAuthSession({
@@ -61,12 +73,6 @@ async function refreshAccessToken(): Promise<string> {
 }
 
 api.interceptors.request.use((config) => {
-  const key = getStoredApiKey();
-  if (key) {
-    config.headers = config.headers ?? {};
-    (config.headers as Record<string, string>)["X-Anthropic-Api-Key"] = key;
-  }
-
   const accessToken = getAccessToken();
   if (accessToken) {
     config.headers = config.headers ?? {};
@@ -84,7 +90,8 @@ api.interceptors.response.use(
 
     if (status === 403 && message && message.toLowerCase().includes("free tier limit")) {
       const { toast } = await import("sonner");
-      toast.error(message, {
+      toast.error("You've hit your free limit", {
+        description: `Upgrade to Pro for unlimited access -- just ${PRO_MONTHLY_PRICE}/mo. ${message}`,
         action: {
           label: "Upgrade",
           onClick: () => {

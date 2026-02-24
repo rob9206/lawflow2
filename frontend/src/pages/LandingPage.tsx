@@ -10,14 +10,19 @@ import {
   GraduationCap,
   Shield,
   Award,
+  Crown,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
+import { PRO_DAILY_PRICE, PRO_MONTHLY_PRICE } from "@/constants/pricing";
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
     navigate("/dashboard");
+  };
+  const handleViewPricing = () => {
+    navigate("/pricing");
   };
 
   return (
@@ -297,6 +302,84 @@ export default function LandingPage() {
                 Upload PDFs, PowerPoints, and readings. The AI extracts key
                 concepts and uses them to create focused study sessions.
               </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Pro Upsell Section */}
+      <section className="py-16 md:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+            <div>
+              <h2
+                style={{
+                  fontSize: "clamp(28px, 4vw, 38px)",
+                  fontWeight: 900,
+                  color: "var(--text-primary)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Unlock your full potential with Pro
+              </h2>
+              <p
+                style={{
+                  marginTop: "12px",
+                  fontSize: "17px",
+                  fontWeight: 500,
+                  lineHeight: 1.6,
+                  color: "var(--text-muted)",
+                }}
+              >
+                Remove daily limits and keep your momentum when practice matters most.
+              </p>
+            </div>
+
+            <Card
+              padding="lg"
+              style={{
+                borderColor: "var(--gold)",
+                boxShadow: "0 0 0 1px var(--gold), 0 16px 36px rgba(255, 202, 40, 0.14)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Crown size={18} style={{ color: "var(--gold)" }} />
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "var(--gold)" }}>
+                  PRO PLAN
+                </span>
+              </div>
+
+              <p style={{ fontSize: "34px", fontWeight: 900, color: "var(--text-primary)" }}>
+                {PRO_MONTHLY_PRICE}/mo
+              </p>
+              <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "14px" }}>
+                About {PRO_DAILY_PRICE}/day
+              </p>
+
+              <ul className="space-y-2 mb-5">
+                <li className="flex items-center gap-2">
+                  <Check size={16} style={{ color: "var(--green)" }} />
+                  <span style={{ color: "var(--text-secondary)", fontWeight: 700, fontSize: "14px" }}>
+                    Unlimited tutor sessions
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check size={16} style={{ color: "var(--green)" }} />
+                  <span style={{ color: "var(--text-secondary)", fontWeight: 700, fontSize: "14px" }}>
+                    Unlimited exam simulations + flashcards
+                  </span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check size={16} style={{ color: "var(--green)" }} />
+                  <span style={{ color: "var(--text-secondary)", fontWeight: 700, fontSize: "14px" }}>
+                    Unlimited AutoTeach and document uploads
+                  </span>
+                </li>
+              </ul>
+
+              <button className="duo-btn duo-btn-green w-full" onClick={handleViewPricing}>
+                View Full Pricing
+              </button>
             </Card>
           </div>
         </div>
