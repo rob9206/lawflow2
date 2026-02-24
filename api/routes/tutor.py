@@ -176,7 +176,6 @@ def recent_sessions():
     """Get the most recent study sessions."""
     user_id = get_current_user_id()
     limit = request.args.get("limit", 5, type=int)
-    from api.services.database import get_db
     from api.models.session import StudySession
     with get_db() as db:
         sessions = (

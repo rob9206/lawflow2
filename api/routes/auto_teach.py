@@ -131,7 +131,6 @@ def start_auto_session():
         opening = auto_session["opening_message"]
     else:
         from api.services.auto_teach import select_teaching_mode, _build_opening_message
-        from api.services.database import get_db
         from api.models.student import TopicMastery
         from api.services.exam_analyzer import get_aggregated_topic_weights
 
