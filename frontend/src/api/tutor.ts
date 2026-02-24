@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { getAccessToken } from "@/lib/authStorage";
 import type { TutorSession, TutorMode } from "@/types";
 
 export async function getModes(): Promise<Record<string, TutorMode>> {
@@ -37,6 +38,10 @@ export async function sendMessageStream(
   onDone: () => void
 ): Promise<void> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   const response = await fetch("/api/tutor/message", {
     method: "POST",

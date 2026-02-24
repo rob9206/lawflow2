@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { getAccessToken } from "@/lib/authStorage";
 
 export interface TeachingTarget {
   subject: string;
@@ -75,6 +76,10 @@ export async function startAutoSession(
   availableMinutes?: number,
 ): Promise<void> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   const response = await fetch("/api/auto-teach/start", {
     method: "POST",

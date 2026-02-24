@@ -73,11 +73,49 @@ def _migrate_missing_columns():
                     conn.execute(text(stmt))
 
 
+_init_done = False
+
+
 def init_database():
-    """Create all tables and migrate any missing columns."""
-    Base.metadata.create_all(bind=engine)
-    _migrate_missing_columns()
-    print("Database initialized successfully.")
+    """Create all tables and migrate any missing columns.
+
+    Safe to call from multiple gunicorn workers -- uses a module-level
+    flag to skip redundant work and wraps DDL in a try/except so that
+    'already exists' errors from a concurrent worker don't crash the
+    process.
+    """
+    global _init_done
+    if _init_done:
+        return
+
+    try:
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+    except Exception as exc:
+        msg = str(exc)
+        if "already exists" in msg:
+            logger.warning(
+                "create_all: 'already exists' (safe): %s", exc,
+            )
+        elif "database is locked" in msg:
+            logger.warning(
+                "create_all: DB locked (another worker): %s", exc,
+            )
+        else:
+            raise
+
+    try:
+        _migrate_missing_columns()
+    except Exception as exc:
+        msg = str(exc)
+        if "already exists" in msg or "database is locked" in msg:
+            logger.warning(
+                "Migration concurrency issue (safe): %s", exc,
+            )
+        else:
+            raise
+
+    _init_done = True
+    logger.info("Database initialized successfully.")
 
 
 def reset_database():

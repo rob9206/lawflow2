@@ -61,8 +61,8 @@ class StudySession(Base):
 class SessionMessage(Base):
     __tablename__ = "session_messages"
     __table_args__ = (
-        Index("idx_sm_user", "user_id"),
-        Index("idx_sm_session", "session_id"),
+        Index("idx_smsg_user", "user_id"),
+        Index("idx_smsg_session", "session_id"),
     )
 
     id = Column(String, primary_key=True, default=_uuid)
