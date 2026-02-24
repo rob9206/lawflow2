@@ -8,7 +8,7 @@ import { SUBJECTS_REQUIRED, AUTOTEACH_MODE_LABELS } from "@/lib/constants";
 import Card from "@/components/ui/Card";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
-import { Zap, ChevronRight, Clock, ArrowRight, BarChart3, BookOpen } from "lucide-react";
+import { Zap, ChevronRight, Clock, ArrowRight, BarChart3, BookOpen, Loader2 } from "lucide-react";
 
 const SUBJECT_VALUES = new Set<string>(SUBJECTS_REQUIRED.map((s) => s.value));
 
@@ -25,6 +25,7 @@ export default function AutoTeachPage() {
   const [availableMinutes, setAvailableMinutes] = useState<number>(60);
 
   const [streaming, setStreaming] = useState(false);
+  const [streamingTopic, setStreamingTopic] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const { data: masteryData } = useQuery({
@@ -48,6 +49,7 @@ export default function AutoTeachPage() {
     if (!selectedSubject) return;
 
     setStreaming(true);
+    setStreamingTopic(topic ?? null);
     setSessionError(null);
 
     try {
@@ -65,6 +67,7 @@ export default function AutoTeachPage() {
       setSessionError(msg);
     } finally {
       setStreaming(false);
+      setStreamingTopic(null);
     }
   };
 
@@ -242,10 +245,33 @@ export default function AutoTeachPage() {
               className="duo-btn duo-btn-green w-full mb-6 flex items-center justify-center gap-3"
               style={{ padding: "16px 24px", fontSize: "16px" }}
             >
-              <Zap size={20} />
-              Start Studying — {plan.teaching_plan[0]?.display_name}
-              <ArrowRight size={18} />
+              {streaming ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Preparing your session…
+                </>
+              ) : (
+                <>
+                  <Zap size={20} />
+                  Start Studying — {plan.teaching_plan[0]?.display_name}
+                  <ArrowRight size={18} />
+                </>
+              )}
             </button>
+          )}
+
+          {streaming && (
+            <Card className="mb-6 flex items-center gap-4" style={{ borderColor: "var(--green)", backgroundColor: "var(--green-bg)" }}>
+              <Loader2 size={20} className="animate-spin" style={{ color: "var(--green-dark)" }} />
+              <div>
+                <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--green-dark)" }}>
+                  Setting up your study session
+                </p>
+                <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                  The AI is analyzing your progress and preparing personalized content…
+                </p>
+              </div>
+            </Card>
           )}
 
           <div className="space-y-2">
@@ -257,6 +283,7 @@ export default function AutoTeachPage() {
                 hasExamData={plan.has_exam_data}
                 onStart={() => startSession(target.topic)}
                 disabled={streaming}
+                loading={streamingTopic === target.topic}
               />
             ))}
           </div>
@@ -272,12 +299,14 @@ function TopicRow({
   hasExamData,
   onStart,
   disabled,
+  loading,
 }: {
   target: TeachingTarget;
   rank: number;
   hasExamData: boolean;
   onStart: () => void;
   disabled?: boolean;
+  loading?: boolean;
 }) {
   return (
     <Card className="flex items-center gap-4">
@@ -299,8 +328,8 @@ function TopicRow({
           </Badge>
         </div>
         <p style={{ fontSize: "12px", marginTop: "2px", color: "var(--text-muted)" }}>
-          {target.mode_reason}
-          {hasExamData && ` · ${(target.exam_weight * 100).toFixed(0)}% of exam`}
+          {loading ? "Starting session…" : target.mode_reason}
+          {!loading && hasExamData && ` · ${(target.exam_weight * 100).toFixed(0)}% of exam`}
         </p>
       </div>
 
@@ -322,7 +351,7 @@ function TopicRow({
         className="shrink-0 p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         style={{ backgroundColor: "var(--surface-bg)", color: "var(--text-muted)" }}
       >
-        <ChevronRight size={18} />
+        {loading ? <Loader2 size={18} className="animate-spin" /> : <ChevronRight size={18} />}
       </button>
     </Card>
   );
