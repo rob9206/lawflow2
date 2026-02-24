@@ -24,6 +24,7 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     display_name = Column(String, default="Law Student")
     avatar_url = Column(String)
+    bio = Column(String, default="")
 
     # Subscription / billing fields
     tier = Column(String, default="free")  # free | pro
@@ -40,6 +41,7 @@ class User(Base):
             "email": self.email,
             "display_name": self.display_name,
             "avatar_url": self.avatar_url,
+            "bio": self.bio or "",
             "tier": self.tier,
             "subscription_status": self.subscription_status,
             "created_at": self.created_at.isoformat() if self.created_at else None,

@@ -1,26 +1,45 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { User, BookOpen, Target, Clock, GraduationCap, FileText, AlertTriangle, RotateCcw, Trash2, Key } from "lucide-react";
+import { User, BookOpen, Target, Clock, GraduationCap, FileText, AlertTriangle, RotateCcw, Trash2, Camera } from "lucide-react";
 import { getProfileStats, resetProgress, resetAll } from "@/api/profile";
-import { clearApiKey, getStoredApiKey, looksLikeAnthropicKey, maskApiKey, saveApiKey } from "@/lib/apiKey";
-import Card from "@/components/ui/Card";
 import StatCard from "@/components/ui/StatCard";
 import PageHeader from "@/components/ui/PageHeader";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilePage() {
+  const { user, updateProfile, uploadAvatar } = useAuth();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [showResetProgressConfirm, setShowResetProgressConfirm] = useState(false);
   const [showResetAllConfirm, setShowResetAllConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
-  const [apiKeyInput, setApiKeyInput] = useState(() => getStoredApiKey());
-  const [savedApiKey, setSavedApiKey] = useState(() => getStoredApiKey());
-  const [apiKeyMessage, setApiKeyMessage] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["profile-stats"],
     queryFn: getProfileStats,
   });
+
+  const memberSince = useMemo(() => {
+    if (!user?.created_at) return "Unknown";
+    const parsed = new Date(user.created_at);
+    if (Number.isNaN(parsed.getTime())) return "Unknown";
+    return parsed.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }, [user?.created_at]);
+
+  useEffect(() => {
+    setDisplayName(user?.display_name ?? "");
+    setBio(user?.bio ?? "");
+    setAvatarPreview(null);
+    setAvatarFile(null);
+  }, [user?.display_name, user?.bio, user?.avatar_url]);
 
   const handleResetProgress = async () => {
     setIsResetting(true);
@@ -50,29 +69,45 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSaveApiKey = () => {
-    const normalized = saveApiKey(apiKeyInput);
-    setApiKeyInput(normalized);
-    setSavedApiKey(normalized);
-
-    if (!normalized) {
-      setApiKeyMessage("Saved key cleared.");
-      return;
-    }
-
-    if (!looksLikeAnthropicKey(normalized)) {
-      setApiKeyMessage("Key saved, but format looks unusual (Anthropic keys usually start with sk-ant-).");
-      return;
-    }
-
-    setApiKeyMessage("API key saved. New tutor requests will use this key.");
+  const handleAvatarPick = () => {
+    fileInputRef.current?.click();
   };
 
-  const handleClearApiKey = () => {
-    clearApiKey();
-    setApiKeyInput("");
-    setSavedApiKey("");
-    setApiKeyMessage("Saved key cleared.");
+  const handleAvatarSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setProfileMessage("Please select a valid image file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setProfileMessage("Avatar must be 2MB or smaller.");
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setProfileMessage("");
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSavingProfile(true);
+    setProfileMessage("");
+    try {
+      if (avatarFile) {
+        await uploadAvatar(avatarFile);
+      }
+      await updateProfile({
+        display_name: displayName.trim(),
+        bio: bio.trim().slice(0, 200),
+      });
+      await queryClient.invalidateQueries();
+      setAvatarFile(null);
+      setProfileMessage("Profile updated successfully.");
+    } catch {
+      setProfileMessage("Failed to update profile. Please try again.");
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   if (isLoading) {
@@ -98,100 +133,140 @@ export default function ProfilePage() {
 
       {/* Profile Header */}
       <div className="duo-card p-5">
-        <div className="flex items-center gap-4">
-          <div
-            className="flex items-center justify-center"
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: "50%",
-              border: "2px solid var(--blue)",
-              backgroundColor: "var(--blue-bg)",
-              color: "var(--blue)",
-            }}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={handleAvatarPick}
+              className="relative flex items-center justify-center overflow-hidden"
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                border: "2px solid var(--blue)",
+                backgroundColor: "var(--blue-bg)",
+                color: "var(--blue)",
+              }}
+            >
+              {(avatarPreview || user?.avatar_url) ? (
+                <img
+                  src={avatarPreview || user?.avatar_url || ""}
+                  alt="Profile avatar"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span style={{ fontSize: 26, fontWeight: 800 }}>
+                  {(user?.display_name || user?.email || "U").charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span
+                className="absolute bottom-0 right-0 rounded-full p-1.5"
+                style={{ backgroundColor: "var(--blue)", color: "white" }}
+              >
+                <Camera size={14} />
+              </span>
+            </button>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)" }}>
+                  {user?.display_name || "Law Student"}
+                </h3>
+                <span
+                  className="rounded-full px-2 py-1"
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    color: user?.tier === "pro" ? "var(--purple)" : "var(--text-muted)",
+                    backgroundColor: user?.tier === "pro" ? "var(--purple-bg)" : "var(--card-bg)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  {user?.tier === "pro" ? "Pro" : "Free"}
+                </span>
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}>
+                {user?.email ?? "No email available"}
+              </p>
+              <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)", marginTop: 2 }}>
+                Member since {memberSince}
+              </p>
+            </div>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            aria-label="Upload avatar image"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            onChange={handleAvatarSelected}
+            className="hidden"
+          />
+
+          <button
+            onClick={handleSaveProfile}
+            disabled={isSavingProfile || !displayName.trim()}
+            className="duo-btn duo-btn-green"
+            style={{ opacity: isSavingProfile || !displayName.trim() ? 0.6 : 1 }}
           >
-            <User size={28} />
-          </div>
-          <div>
-            <h3 style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)" }}>
-              Law Student
-            </h3>
-            <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}>
-              LawFlow Learner
-            </p>
-          </div>
+            {isSavingProfile ? "Saving..." : "Save Profile"}
+          </button>
         </div>
       </div>
 
       <div className="duo-card p-5">
-        <div className="flex items-center gap-3 mb-3">
-          <Key size={18} style={{ color: "var(--blue)" }} />
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
-            Anthropic API Key
-          </h3>
+        <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", marginBottom: 12 }}>
+          Profile Details
+        </h3>
+        <div className="space-y-3">
+          <div>
+            <label
+              htmlFor="display_name"
+              style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6 }}
+            >
+              Display name
+            </label>
+            <input
+              id="display_name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={80}
+              className="duo-input w-full"
+              placeholder="Your public name"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="bio"
+              style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6 }}
+            >
+              Bio
+            </label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value.slice(0, 200))}
+              maxLength={200}
+              rows={4}
+              className="duo-input w-full"
+              placeholder="Tell us a bit about your study focus."
+            />
+            <p style={{ marginTop: 6, fontSize: 12, color: "var(--text-muted)" }}>{bio.length}/200</p>
+          </div>
         </div>
-        <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-muted)", marginBottom: 12 }}>
-          Stored locally in this browser and sent only to your LawFlow backend.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <input
-            type="password"
-            value={apiKeyInput}
-            onChange={(e) => setApiKeyInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleSaveApiKey();
-              }
-            }}
-            placeholder="sk-ant-..."
-            autoComplete="off"
-            className="duo-input flex-1"
-            style={{ minWidth: 320 }}
-          />
-          <button
-            onClick={handleSaveApiKey}
-            className="duo-btn duo-btn-green"
-          >
-            Save Key
-          </button>
-          <button
-            onClick={handleClearApiKey}
-            className="duo-btn duo-btn-outline"
-          >
-            Clear
-          </button>
-        </div>
-        <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)", marginTop: 10 }}>
-          Current key:{" "}
-          <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>
-            {maskApiKey(savedApiKey)}
-          </span>
-        </p>
-        {apiKeyMessage && (
-          <p
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              marginTop: 8,
-              color: apiKeyMessage.includes("unusual") ? "var(--orange)" : "var(--green)",
-            }}
-          >
-            {apiKeyMessage}
-          </p>
-        )}
       </div>
 
-      {resetMessage && (
+      {(profileMessage || resetMessage) && (
         <div
           className="duo-card p-4"
           style={{
-            backgroundColor: resetMessage.includes("Failed") ? "var(--red-bg)" : "var(--green-bg)",
-            borderColor: resetMessage.includes("Failed") ? "var(--red)" : "var(--green)",
-            color: resetMessage.includes("Failed") ? "var(--red)" : "var(--green)",
+            backgroundColor: (profileMessage + resetMessage).includes("Failed") ? "var(--red-bg)" : "var(--green-bg)",
+            borderColor: (profileMessage + resetMessage).includes("Failed") ? "var(--red)" : "var(--green)",
+            color: (profileMessage + resetMessage).includes("Failed") ? "var(--red)" : "var(--green)",
           }}
         >
-          {resetMessage}
+          {profileMessage || resetMessage}
         </div>
       )}
 

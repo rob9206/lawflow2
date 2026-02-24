@@ -141,15 +141,12 @@ def send_message():
 
     if not session_id or not content:
         raise ValidationError("session_id and content are required")
-    header_key = request.headers.get("X-Anthropic-Api-Key", "")
-
     def generate():
         perf_buf = ""
         try:
             for chunk in tutor_engine.send_message(
                 session_id,
                 content,
-                api_key_override=header_key,
                 user_id=user_id,
             ):
                 text = perf_buf + chunk

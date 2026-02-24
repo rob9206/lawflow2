@@ -206,7 +206,7 @@ export default function RewardsPage() {
               sub="Keep studying to unlock badges!"
             />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredAchievements.map((ach) => (
                 <AchievementCard key={ach.achievement_key} achievement={ach} />
               ))}
@@ -259,7 +259,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
 
   return (
     <div
-      className="duo-card p-4 flex flex-col gap-2 relative overflow-hidden transition-all"
+      className="duo-card p-5 flex flex-col gap-2 relative overflow-hidden transition-all"
       style={{
         borderTopColor: rarity.color,
         opacity: achievement.unlocked ? 1 : 0.6,

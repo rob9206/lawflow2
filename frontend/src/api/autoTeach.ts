@@ -1,5 +1,4 @@
 import api from "@/lib/api";
-import { getStoredApiKey } from "@/lib/apiKey";
 
 export interface TeachingTarget {
   subject: string;
@@ -75,11 +74,7 @@ export async function startAutoSession(
   onDone?: (sessionId: string, mode: string, topic: string) => void,
   availableMinutes?: number,
 ): Promise<void> {
-  const key = getStoredApiKey();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (key) {
-    headers["X-Anthropic-Api-Key"] = key;
-  }
 
   const response = await fetch("/api/auto-teach/start", {
     method: "POST",

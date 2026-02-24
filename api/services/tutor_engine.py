@@ -71,8 +71,8 @@ def _clean_markdown(text: str) -> str:
     return '\n'.join(cleaned_lines)
 
 
-def _get_client(api_key_override: str | None = None) -> anthropic.Anthropic:
-    return get_claude_client(api_key_override)
+def _get_client() -> anthropic.Anthropic:
+    return get_claude_client()
 
 
 def create_session(
@@ -200,7 +200,6 @@ def _get_exam_context(subject: str, user_id: str | None = None) -> str:
 def send_message(
     session_id: str,
     user_content: str,
-    api_key_override: str | None = None,
     user_id: str | None = None,
 ):
     """Send a user message and stream Claude's response.
@@ -248,7 +247,7 @@ def send_message(
     system_prompt = build_system_prompt(mode, student_ctx, knowledge_ctx, exam_ctx, time_ctx)
 
     # Stream from Claude
-    client = _get_client(api_key_override)
+    client = _get_client()
     full_response = ""
 
     with client.messages.stream(

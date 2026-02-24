@@ -101,7 +101,6 @@ def start_auto_session():
     subject = data["subject"]
     topic = data.get("topic")
     available_minutes = data.get("available_minutes")
-    header_key = request.headers.get("X-Anthropic-Api-Key", "")
     # #region agent log
     _debug_log(
         "H2",
@@ -110,9 +109,6 @@ def start_auto_session():
             "subject": subject,
             "has_topic": bool(topic),
             "available_minutes": available_minutes,
-            "header_present": bool(header_key),
-            "header_len": len(header_key.strip()),
-            "header_looks_anthropic": header_key.strip().startswith("sk-ant-"),
         },
     )
     # #endregion
@@ -187,7 +183,6 @@ def start_auto_session():
             for chunk in tutor_engine.send_message(
                 session["id"],
                 opening,
-                api_key_override=header_key,
                 user_id=user_id,
             ):
                 text = perf_buf + chunk

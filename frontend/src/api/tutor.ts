@@ -1,5 +1,4 @@
 import api from "@/lib/api";
-import { getStoredApiKey } from "@/lib/apiKey";
 import type { TutorSession, TutorMode } from "@/types";
 
 export async function getModes(): Promise<Record<string, TutorMode>> {
@@ -37,11 +36,7 @@ export async function sendMessageStream(
   onChunk: (text: string) => void,
   onDone: () => void
 ): Promise<void> {
-  const key = getStoredApiKey();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (key) {
-    headers["X-Anthropic-Api-Key"] = key;
-  }
 
   const response = await fetch("/api/tutor/message", {
     method: "POST",

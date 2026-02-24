@@ -1,12 +1,14 @@
 """Authentication and user profile routes."""
 
 import re
+from pathlib import Path
 
 import bcrypt
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_from_directory
 from sqlalchemy.exc import IntegrityError
+from werkzeug.utils import secure_filename
 
-from api.errors import UnauthorizedError, ValidationError
+from api.errors import NotFoundError, UnauthorizedError, ValidationError
 from api.middleware.auth import (
     decode_token,
     get_current_user,
@@ -30,6 +32,10 @@ from api.services.subject_taxonomy import seed_subject_taxonomy
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_ALLOWED_AVATAR_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
+_AVATAR_FILENAME_RE = re.compile(r"^[a-zA-Z0-9-]+\.(?:jpg|jpeg|png|gif|webp)$", re.IGNORECASE)
+_MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024
+_AVATAR_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "uploads" / "avatars"
 
 
 def _normalize_email(value: str) -> str:
@@ -190,6 +196,7 @@ def update_profile():
     body = request.get_json(force=True)
     display_name = body.get("display_name")
     avatar_url = body.get("avatar_url")
+    bio = body.get("bio")
 
     with get_db() as db:
         user = db.query(User).filter_by(id=user_id).first()
@@ -202,8 +209,63 @@ def update_profile():
             user.display_name = display_name
         if avatar_url is not None:
             user.avatar_url = (avatar_url or "").strip() or None
+        if bio is not None:
+            normalized_bio = (bio or "").strip()
+            if len(normalized_bio) > 200:
+                raise ValidationError("bio must be 200 characters or fewer")
+            user.bio = normalized_bio
         db.flush()
         return jsonify(user.to_dict())
+
+
+@bp.route("/upload-avatar", methods=["POST"])
+@login_required
+def upload_avatar():
+    user_id = get_current_user_id()
+    file = request.files.get("file")
+    if not file or not file.filename:
+        raise ValidationError("avatar file is required")
+
+    safe_name = secure_filename(file.filename)
+    ext = Path(safe_name).suffix.lower().lstrip(".")
+    if ext not in _ALLOWED_AVATAR_EXTENSIONS:
+        raise ValidationError("avatar must be jpg, jpeg, png, gif, or webp")
+
+    file.stream.seek(0, 2)
+    size = file.stream.tell()
+    file.stream.seek(0)
+    if size > _MAX_AVATAR_SIZE_BYTES:
+        raise ValidationError("avatar must be 2MB or smaller")
+
+    _AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+    for existing in _AVATAR_DIR.glob(f"{user_id}.*"):
+        try:
+            existing.unlink()
+        except OSError:
+            pass
+
+    filename = f"{user_id}.{ext}"
+    file.save(_AVATAR_DIR / filename)
+    avatar_url = f"/api/auth/avatar/{filename}"
+
+    with get_db() as db:
+        user = db.query(User).filter_by(id=user_id).first()
+        if not user:
+            raise UnauthorizedError("User not found")
+        user.avatar_url = avatar_url
+        db.flush()
+
+    return jsonify({"avatar_url": avatar_url})
+
+
+@bp.route("/avatar/<filename>", methods=["GET"])
+def get_avatar(filename: str):
+    if not _AVATAR_FILENAME_RE.match(filename):
+        raise ValidationError("Invalid avatar filename")
+    file_path = _AVATAR_DIR / filename
+    if not file_path.exists():
+        raise NotFoundError("Avatar not found")
+    return send_from_directory(str(_AVATAR_DIR), filename)
 
 
 @bp.route("/change-password", methods=["POST"])

@@ -39,8 +39,18 @@ export async function getMe(): Promise<AuthUser> {
 export async function updateProfile(payload: {
   display_name?: string;
   avatar_url?: string;
+  bio?: string;
 }): Promise<AuthUser> {
   const { data } = await api.put("/auth/update-profile", payload);
+  return data;
+}
+
+export async function uploadAvatar(file: File): Promise<{ avatar_url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await api.post("/auth/upload-avatar", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return data;
 }
 

@@ -3,8 +3,11 @@ export interface AuthUser {
   email: string;
   display_name: string;
   avatar_url: string | null;
+  bio: string;
   tier: "free" | "pro";
   subscription_status: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 const ACCESS_TOKEN_KEY = "lawflow.auth.accessToken";

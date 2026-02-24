@@ -12,6 +12,7 @@ import {
   login as loginRequest,
   refresh as refreshRequest,
   register as registerRequest,
+  uploadAvatar as uploadAvatarRequest,
   updateProfile as updateProfileRequest,
 } from "@/api/auth";
 import {
@@ -32,7 +33,8 @@ interface AuthContextValue {
   register: (email: string, password: string, displayName?: string) => Promise<void>;
   logout: () => void;
   refreshSession: () => Promise<boolean>;
-  updateProfile: (payload: { display_name?: string; avatar_url?: string }) => Promise<void>;
+  updateProfile: (payload: { display_name?: string; avatar_url?: string; bio?: string }) => Promise<void>;
+  uploadAvatar: (file: File) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
@@ -117,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
-  const updateProfile = useCallback(async (payload: { display_name?: string; avatar_url?: string }) => {
+  const updateProfile = useCallback(async (payload: { display_name?: string; avatar_url?: string; bio?: string }) => {
     const updated = await updateProfileRequest(payload);
     const refreshToken = getRefreshToken();
     const accessToken = getAccessToken();
@@ -129,6 +131,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     }
     setUser(updated);
+  }, []);
+
+  const uploadAvatar = useCallback(async (file: File) => {
+    const { avatar_url } = await uploadAvatarRequest(file);
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, avatar_url };
+      const refreshToken = getRefreshToken();
+      const accessToken = getAccessToken();
+      if (refreshToken && accessToken) {
+        saveAuthSession({
+          accessToken,
+          refreshToken,
+          user: updated,
+        });
+      }
+      return updated;
+    });
   }, []);
 
   const updatePassword = useCallback(async (currentPassword: string, newPassword: string) => {
@@ -149,9 +169,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshSession,
       updateProfile,
+      uploadAvatar,
       changePassword: updatePassword,
     }),
-    [user, isLoading, login, register, logout, refreshSession, updateProfile, updatePassword]
+    [user, isLoading, login, register, logout, refreshSession, updateProfile, uploadAvatar, updatePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
