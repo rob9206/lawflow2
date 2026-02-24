@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { LogIn } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Card from "@/components/ui/Card";
+import PasswordInput from "@/components/ui/PasswordInput";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -33,9 +34,21 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--page-bg)" }}>
       <Card className="w-full max-w-md" padding="lg">
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <h2 style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "4px" }}>
+            Welcome back to
+          </h2>
+          <h1 style={{ fontSize: "28px", fontWeight: 900, color: "var(--text-primary)", marginBottom: "8px" }}>
+            LawFlow
+          </h1>
+          <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)" }}>
+            Your AI-powered law study companion
+          </p>
+        </div>
+        
         <div className="flex items-center gap-2 mb-6">
           <LogIn size={20} style={{ color: "var(--blue)" }} />
-          <h1 style={{ fontSize: "24px", fontWeight: 900, color: "var(--text-primary)" }}>Log In</h1>
+          <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--text-primary)" }}>Log In</h2>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
@@ -50,15 +63,29 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="duo-label">Password</label>
-            <input
-              className="duo-input w-full"
-              type="password"
+            <PasswordInput
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              onChange={setPassword}
+              label="Password"
               autoComplete="current-password"
+              required
             />
+          </div>
+          <div style={{ textAlign: "right", marginTop: "-8px" }}>
+            <Link
+              to="#"
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--text-muted)",
+                textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--blue)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+            >
+              Forgot password?
+            </Link>
           </div>
           {error && (
             <div className="duo-card p-3" style={{ background: "var(--red-bg)", borderColor: "var(--red)" }}>

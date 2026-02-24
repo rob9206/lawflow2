@@ -43,8 +43,34 @@ def _normalize_email(value: str) -> str:
 
 
 def _validate_password(password: str) -> None:
-    if len(password or "") < 8:
+    """Validate password meets security requirements.
+
+    Rules:
+    - At least 8 characters
+    - At least 1 uppercase letter
+    - At least 1 lowercase letter
+    - At least 1 digit
+    - At least 1 special character
+    """
+    pwd = password or ""
+
+    if len(pwd) < 8:
         raise ValidationError("Password must be at least 8 characters")
+    if not any(c.isupper() for c in pwd):
+        raise ValidationError(
+            "Password must contain at least one uppercase letter"
+        )
+    if not any(c.islower() for c in pwd):
+        raise ValidationError(
+            "Password must contain at least one lowercase letter"
+        )
+    if not any(c.isdigit() for c in pwd):
+        raise ValidationError("Password must contain at least one digit")
+    if not any(c in "!@#$%^&*-_=+[]{}|;:,.<>?" for c in pwd):
+        raise ValidationError(
+            "Password must contain at least one special character "
+            "(!@#$%^&* etc.)"
+        )
 
 
 def _hash_password(password: str) -> str:
