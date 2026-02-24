@@ -8,8 +8,10 @@ import {
   saveAuthSession,
 } from "@/lib/authStorage";
 
+const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/$/, "");
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: apiBaseUrl,
   timeout: 120_000,
 });
 
@@ -29,7 +31,7 @@ async function refreshAccessToken(): Promise<string> {
 
   if (!refreshPromise) {
     refreshPromise = axios
-      .post("/api/auth/refresh", { refresh_token: refreshToken })
+      .post(`${apiBaseUrl}/auth/refresh`, { refresh_token: refreshToken })
       .then((resp) => {
         const data = resp.data as {
           access_token: string;
