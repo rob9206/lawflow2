@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 def create_app(static_dir: str | None = None) -> Flask:
+    config.validate()
+
     resolved_static_dir: str | None = None
     if static_dir:
         candidate = Path(static_dir).resolve()
@@ -33,8 +35,6 @@ def create_app(static_dir: str | None = None) -> Flask:
             "ANTHROPIC_API_KEY is not set! Document processing will fail. "
             "Add your key to the .env file."
         )
-        print("\n*** WARNING: ANTHROPIC_API_KEY is not set in .env! ***")
-        print("*** Document uploads will fail until you add it.   ***\n")
 
     allowed_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
     extra_origins = os.getenv("ALLOWED_ORIGINS", "")
@@ -63,8 +63,6 @@ def create_app(static_dir: str | None = None) -> Flask:
             {
                 "status": "ok",
                 "app": "LawFlow",
-                "debug_app_marker": "DBG_APP_5002",
-                "app_file": __file__,
             }
         )
 

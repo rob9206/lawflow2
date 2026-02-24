@@ -17,7 +17,7 @@ load_dotenv(dotenv_path=_env_path, override=True)
 class Config:
     # Flask
     SECRET_KEY: str = field(default_factory=lambda: os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me"))
-    DEBUG: bool = field(default_factory=lambda: os.getenv("FLASK_DEBUG", "true").lower() == "true")
+    DEBUG: bool = field(default_factory=lambda: os.getenv("FLASK_DEBUG", "false").lower() == "true")
     HOST: str = field(default_factory=lambda: os.getenv("FLASK_HOST", "127.0.0.1"))
     PORT: int = field(default_factory=lambda: int(os.getenv("FLASK_PORT", "5002")))
 
@@ -42,6 +42,16 @@ class Config:
     PROCESSED_DIR: str = field(default_factory=lambda: os.getenv("PROCESSED_DIR", "data/processed"))
     DATABASE_URL: str = field(default_factory=lambda: os.getenv("DATABASE_URL", "sqlite:///data/lawflow.db"))
     MAX_UPLOAD_MB: int = field(default_factory=lambda: int(os.getenv("MAX_UPLOAD_MB", "100")))
+
+    def validate(self) -> None:
+        """Validate production-critical configuration."""
+        if self.DEBUG:
+            return
+
+        if self.SECRET_KEY == "dev-secret-change-me":
+            raise RuntimeError("FLASK_SECRET_KEY must be set in production")
+        if self.JWT_SECRET_KEY == "dev-secret-change-me":
+            raise RuntimeError("JWT_SECRET_KEY must be set in production")
 
 
 config = Config()

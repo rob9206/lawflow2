@@ -1,8 +1,7 @@
 """Shared Anthropic client construction with robust key normalization."""
 
-import json
+import logging
 import os
-import time
 
 import anthropic
 from flask import has_request_context, request
@@ -10,7 +9,7 @@ from flask import has_request_context, request
 from api.config import config
 
 _QUOTE_CHARS = "\"'`“”‘’"
-_DEBUG_LOG_PATH = r"c:\Dev\LawFlow\.claude\worktrees\charming-dewdney\.cursor\debug.log"
+logger = logging.getLogger(__name__)
 
 
 def _normalize_api_key(raw: str | None) -> str:
@@ -32,30 +31,6 @@ def _normalize_api_key(raw: str | None) -> str:
 
 def _looks_like_anthropic_key(key: str) -> bool:
     return key.startswith("sk-ant-") and len(key) >= 40
-
-
-def _debug_log(hypothesis_id: str, message: str, data: dict):
-    # #region agent log
-    try:
-        os.makedirs(os.path.dirname(_DEBUG_LOG_PATH), exist_ok=True)
-        with open(_DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "id": f"log_{int(time.time() * 1000)}_anthropic_client",
-                        "timestamp": int(time.time() * 1000),
-                        "runId": "pre-fix",
-                        "hypothesisId": hypothesis_id,
-                        "location": "api/services/anthropic_client.py:resolve_anthropic_api_key",
-                        "message": message,
-                        "data": data,
-                    }
-                )
-                + "\n"
-            )
-    except Exception:
-        pass
-    # #endregion
 
 
 def _request_header_api_key() -> str:
@@ -84,14 +59,11 @@ def resolve_anthropic_api_key(override_key: str | None = None) -> str:
         selected_source = "header"
         selected_key = header_key
     elif not config_key and not env_key:
-        _debug_log(
-            "H3",
-            "No key candidates available",
-            {
-                "header_len": len(header_key),
-                "config_len": len(config_key),
-                "env_len": len(env_key),
-            },
+        logger.debug(
+            "No Anthropic key candidates available (header_present=%s, config_present=%s, env_present=%s)",
+            bool(header_key),
+            bool(config_key),
+            bool(env_key),
         )
         raise RuntimeError(
             "ANTHROPIC_API_KEY is not set. "
@@ -108,25 +80,13 @@ def resolve_anthropic_api_key(override_key: str | None = None) -> str:
         selected_source = "config" if config_key else "env"
         selected_key = config_key or env_key
 
-    _debug_log(
-        "H3",
-        "Resolved Anthropic key source",
-        {
-                "explicit_present": bool(explicit_key),
-                "explicit_len": len(explicit_key),
-                "explicit_valid": explicit_valid,
-            "header_present": bool(header_key),
-            "header_len": len(header_key),
-            "header_valid": header_valid,
-            "config_present": bool(config_key),
-            "config_len": len(config_key),
-            "config_valid": config_valid,
-            "env_present": bool(env_key),
-            "env_len": len(env_key),
-            "env_valid": env_valid,
-            "selected_source": selected_source,
-            "selected_len": len(selected_key),
-        },
+    logger.debug(
+        "Resolved Anthropic key source (source=%s, explicit_valid=%s, header_valid=%s, config_valid=%s, env_valid=%s)",
+        selected_source,
+        explicit_valid,
+        header_valid,
+        config_valid,
+        env_valid,
     )
     return selected_key
 
