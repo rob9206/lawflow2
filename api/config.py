@@ -44,14 +44,31 @@ class Config:
     MAX_UPLOAD_MB: int = field(default_factory=lambda: int(os.getenv("MAX_UPLOAD_MB", "100")))
 
     def validate(self) -> None:
-        """Validate production-critical configuration."""
+        """Validate production-critical configuration.
+
+        Generates random secrets when defaults are detected so the app can
+        always start, but logs a loud warning so operators know to set them.
+        """
+        import logging
+        import secrets as _secrets
+
+        _log = logging.getLogger("api.config")
+
         if self.DEBUG:
             return
 
         if self.SECRET_KEY == "dev-secret-change-me":
-            raise RuntimeError("FLASK_SECRET_KEY must be set in production")
+            self.SECRET_KEY = _secrets.token_hex(32)
+            _log.warning(
+                "FLASK_SECRET_KEY is not set -- generated a random key. "
+                "Sessions will not survive restarts. Set FLASK_SECRET_KEY in your environment."
+            )
         if self.JWT_SECRET_KEY == "dev-secret-change-me":
-            raise RuntimeError("JWT_SECRET_KEY must be set in production")
+            self.JWT_SECRET_KEY = _secrets.token_hex(32)
+            _log.warning(
+                "JWT_SECRET_KEY is not set -- generated a random key. "
+                "Auth tokens will not survive restarts. Set JWT_SECRET_KEY in your environment."
+            )
 
 
 config = Config()
