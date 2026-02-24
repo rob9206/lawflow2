@@ -1,18 +1,13 @@
 """Shared Anthropic Claude API client."""
 
-import anthropic
-
-from api.config import config
+from api.services.anthropic_client import create_anthropic_client
 
 
-def get_claude_client() -> anthropic.Anthropic:
+def get_claude_client():
     """Return a configured Anthropic client.
 
-    Raises RuntimeError if the API key is not set.
+    Delegates to anthropic_client.create_anthropic_client which handles
+    key normalization (stripping quotes, Bearer prefix, etc.) and
+    resolution from config/env.
     """
-    api_key = config.ANTHROPIC_API_KEY
-    if not api_key:
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY is not set. Add your Anthropic API key to the .env file."
-        )
-    return anthropic.Anthropic(api_key=api_key)
+    return create_anthropic_client()
