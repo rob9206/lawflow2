@@ -18,6 +18,7 @@ import ReactMarkdown from "react-markdown";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import UsageBanner from "@/components/common/UsageBanner";
 import MasteryBar from "@/components/ui/MasteryBar";
 import {
   FileQuestion,
@@ -177,6 +178,8 @@ export default function ExamSimulatorPage() {
           title="Exam Simulator"
           subtitle="Timed practice exams weighted by your professor's patterns"
         />
+
+        <UsageBanner feature="exam_generations_daily" />
 
         <div>
           <label className="duo-label">Subject</label>

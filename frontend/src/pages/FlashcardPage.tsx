@@ -29,6 +29,7 @@ import StatCard from "@/components/ui/StatCard";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import SubjectFilter from "@/components/ui/SubjectFilter";
+import UsageBanner from "@/components/common/UsageBanner";
 
 export default function FlashcardPage() {
   const navigate = useNavigate();
@@ -142,6 +143,8 @@ export default function FlashcardPage() {
         subtitle="Spaced repetition review — SM-2 algorithm"
         action={generateButton}
       />
+
+      <UsageBanner feature="flashcard_generations_daily" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard icon={<CreditCard size={16} />} label="Total Cards" value={String(stats?.total ?? 0)} color="var(--purple)" />

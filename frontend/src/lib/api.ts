@@ -1,5 +1,4 @@
 import axios from "axios";
-import { PRO_MONTHLY_PRICE } from "@/constants/pricing";
 import {
   clearAuthSession,
   getAccessToken,
@@ -92,16 +91,9 @@ api.interceptors.response.use(
     const original = (error.config ?? {}) as RetryableConfig;
 
     if (status === 403 && message && message.toLowerCase().includes("free tier limit")) {
-      const { toast } = await import("sonner");
-      toast.error("You've hit your free limit", {
-        description: `Upgrade to Pro for unlimited access -- just ${PRO_MONTHLY_PRICE}/mo. ${message}`,
-        action: {
-          label: "Upgrade",
-          onClick: () => {
-            window.location.href = "/pricing";
-          },
-        },
-      });
+      window.dispatchEvent(
+        new CustomEvent("lawflow:upgrade-prompt", { detail: { message } })
+      );
     }
 
     const isAuthRoute = (original.url ?? "").includes("/auth/");
