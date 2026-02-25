@@ -4,7 +4,9 @@ import { Toaster } from "sonner";
 import Layout from "@/components/common/Layout";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import TutorialModal from "@/components/common/TutorialModal";
+import UpgradeModal from "@/components/common/UpgradeModal";
 import { TutorialProvider } from "@/context/TutorialContext";
+import { UpgradeProvider } from "@/context/UpgradeContext";
 import { useAuth } from "@/context/AuthContext";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
@@ -62,6 +64,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <TutorialProvider>
+        <UpgradeProvider>
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -103,6 +106,8 @@ export default function App() {
           </Routes>
         </Suspense>
         <TutorialModal />
+        <UpgradeModal />
+        </UpgradeProvider>
         <Toaster
           position="bottom-right"
           toastOptions={{

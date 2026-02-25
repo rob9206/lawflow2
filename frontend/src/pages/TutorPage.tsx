@@ -9,6 +9,7 @@ import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import SubjectFilter from "@/components/ui/SubjectFilter";
+import UsageBanner from "@/components/common/UsageBanner";
 import {
   Send,
   GraduationCap,
@@ -143,6 +144,7 @@ export default function TutorPage() {
     return (
       <div>
         <PageHeader icon={<GraduationCap size={24} />} title="AI Tutor" />
+        <UsageBanner feature="tutor_sessions_daily" />
 
         <div className="max-w-2xl mt-6">
           <h3 style={{ fontSize: "13px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "12px", color: "var(--text-secondary)" }}>

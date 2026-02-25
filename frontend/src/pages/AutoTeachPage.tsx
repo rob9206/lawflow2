@@ -9,6 +9,7 @@ import Card from "@/components/ui/Card";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import MasteryBar from "@/components/ui/MasteryBar";
+import UsageBanner from "@/components/common/UsageBanner";
 import {
   Zap,
   ChevronRight,
@@ -133,6 +134,8 @@ export default function AutoTeachPage() {
           subtitle="AI-optimized study sessions that teach you exactly what you need"
         />
       </div>
+
+      <UsageBanner feature="auto_teach_sessions_daily" />
 
       {/* Subject picker */}
       {!selectedSubject && (

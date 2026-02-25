@@ -8,6 +8,7 @@ import { SUBJECTS_WITH_AUTODETECT, DOC_TYPES } from "@/lib/constants";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import UsageBanner from "@/components/common/UsageBanner";
 import {
   Upload,
   FileText,
@@ -208,6 +209,7 @@ export default function DocumentsPage() {
         title="Documents"
         subtitle="Upload your course materials to unlock AI-powered, personalized study sessions"
       />
+      <UsageBanner feature="document_uploads_total" />
 
       {/* ── How It Works Pipeline ─────────────────────── */}
       {!hasDocuments && (
