@@ -4,11 +4,51 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTeachingPlan, runSeed, startAutoSession, type TeachingTarget } from "@/api/autoTeach";
 import { getMastery } from "@/api/progress";
 import { masteryColor, cn } from "@/lib/utils";
-import { SUBJECTS_REQUIRED, AUTOTEACH_MODE_LABELS } from "@/lib/constants";
+import { SUBJECTS_REQUIRED, SUBJECT_DESCRIPTIONS, AUTOTEACH_MODE_LABELS } from "@/lib/constants";
 import Card from "@/components/ui/Card";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
-import { Zap, ChevronRight, Clock, ArrowRight, BarChart3, BookOpen, Loader2 } from "lucide-react";
+import MasteryBar from "@/components/ui/MasteryBar";
+import {
+  Zap,
+  ChevronRight,
+  Clock,
+  ArrowRight,
+  BarChart3,
+  BookOpen,
+  Loader2,
+  Scale,
+  FileText,
+  Gavel,
+  ShieldAlert,
+  Landmark,
+  Home,
+  Eye,
+  Briefcase,
+  Sparkles,
+} from "lucide-react";
+
+const SUBJECT_ICONS: Record<string, typeof Scale> = {
+  con_law: Landmark,
+  contracts: FileText,
+  torts: ShieldAlert,
+  crim_law: Gavel,
+  civ_pro: Scale,
+  property: Home,
+  evidence: Eye,
+  prof_responsibility: Briefcase,
+};
+
+const SUBJECT_COLORS: Record<string, { color: string; bg: string }> = {
+  con_law: { color: "var(--blue)", bg: "var(--blue-bg)" },
+  contracts: { color: "var(--green)", bg: "var(--green-bg)" },
+  torts: { color: "var(--red)", bg: "var(--red-bg)" },
+  crim_law: { color: "var(--orange)", bg: "var(--orange-bg)" },
+  civ_pro: { color: "var(--purple)", bg: "var(--purple-bg)" },
+  property: { color: "var(--gold)", bg: "var(--gold-bg)" },
+  evidence: { color: "var(--navy)", bg: "var(--navy-bg)" },
+  prof_responsibility: { color: "var(--blue-dark)", bg: "var(--blue-bg-subtle)" },
+};
 
 const SUBJECT_VALUES = new Set<string>(SUBJECTS_REQUIRED.map((s) => s.value));
 
@@ -95,39 +135,96 @@ export default function AutoTeachPage() {
       </div>
 
       {/* Subject picker */}
-      <div className="grid grid-cols-4 gap-2 mb-6">
+      {!selectedSubject && (
+        <Card padding="md" className="mb-5 animate-fade-up flex items-center gap-3" style={{ background: "var(--blue-bg-subtle)", borderColor: "var(--blue)" }}>
+          <Sparkles size={18} style={{ color: "var(--blue)" }} />
+          <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--blue-dark)" }}>
+            Pick a subject below and AutoTeach will build an optimized study plan based on your weakest topics.
+          </p>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-4 gap-3 mb-6">
         {SUBJECTS_REQUIRED.map((s) => {
           const m = masteryData?.find((x) => x.subject === s.value);
           const active = selectedSubject === s.value;
+          const mastery = m?.mastery_score ?? 0;
+          const SubjectIcon = SUBJECT_ICONS[s.value] || BookOpen;
+          const colors = SUBJECT_COLORS[s.value] || { color: "var(--text-muted)", bg: "var(--surface-bg)" };
+          const isWeakest =
+            !selectedSubject &&
+            masteryData &&
+            masteryData.length > 0 &&
+            masteryData.every((x) => mastery <= x.mastery_score);
           return (
             <Card
               key={s.value}
               hover
               padding="none"
               className={cn(
-                "text-left px-4 py-3 cursor-pointer transition-all",
-                active && "!border-[var(--green)] !bg-[var(--green-bg)]"
+                "text-left px-4 py-3.5 cursor-pointer transition-all relative",
+                active && "!border-[var(--green)] !bg-[var(--green-bg-subtle)]"
               )}
               onClick={() => setSelectedSubject(s.value)}
             >
+              {isWeakest && (
+                <span
+                  className="absolute -top-2 -right-2 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  style={{ background: "var(--orange)", color: "white" }}
+                >
+                  Focus
+                </span>
+              )}
+              <div className="flex items-center gap-2.5 mb-2">
+                <div
+                  className="flex items-center justify-center rounded-lg shrink-0"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    background: active ? "var(--green-bg)" : colors.bg,
+                  }}
+                >
+                  <SubjectIcon
+                    size={17}
+                    style={{ color: active ? "var(--green-dark)" : colors.color }}
+                  />
+                </div>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    color: active ? "var(--green-dark)" : "var(--text-primary)",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {s.label}
+                </p>
+              </div>
               <p
+                className="mb-2"
                 style={{
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  color: active ? "var(--green-dark)" : "var(--text-primary)",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  color: "var(--text-muted)",
+                  lineHeight: 1.4,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
                 }}
               >
-                {s.label}
+                {SUBJECT_DESCRIPTIONS[s.value] || ""}
               </p>
+              <MasteryBar score={mastery} size="sm" />
               <p
-                className="mt-0.5"
+                className="mt-1"
                 style={{
                   fontSize: "12px",
-                  fontWeight: 600,
-                  color: m ? masteryColor(m.mastery_score) : "var(--text-muted)",
+                  fontWeight: 700,
+                  color: m ? masteryColor(mastery) : "var(--text-muted)",
                 }}
               >
-                {m ? `${m.mastery_score.toFixed(0)}% mastery` : "Not started"}
+                {m ? `${mastery.toFixed(0)}% mastery` : "Not started"}
               </p>
             </Card>
           );

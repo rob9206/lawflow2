@@ -150,11 +150,73 @@ export default function DashboardPage() {
           </div>
 
           {weakTopics.length === 0 ? (
-            <EmptyState
-              icon={<Layers size={32} />}
-              message="No study data yet."
-              sub="Upload documents and start a tutoring session to build your plan."
-            />
+            <Card padding="lg" className="animate-fade-up">
+              <h4 style={{ fontSize: "17px", fontWeight: 800, color: "var(--text-primary)", marginBottom: 16 }}>
+                Get started in 3 steps
+              </h4>
+              <div className="space-y-3">
+                {[
+                  {
+                    step: 1,
+                    icon: Upload,
+                    title: "Upload your course materials",
+                    desc: "Casebooks, slides, outlines, or past exams",
+                    to: "/documents",
+                    color: "var(--blue)",
+                    bg: "var(--blue-bg)",
+                    btn: "Upload",
+                  },
+                  {
+                    step: 2,
+                    icon: GraduationCap,
+                    title: "Start an AI study session",
+                    desc: "Socratic questioning, IRAC practice, issue spotting & more",
+                    to: "/tutor",
+                    color: "var(--green)",
+                    bg: "var(--green-bg)",
+                    btn: "Study",
+                  },
+                  {
+                    step: 3,
+                    icon: CreditCard,
+                    title: "Review with flashcards",
+                    desc: "Spaced repetition locks knowledge into long-term memory",
+                    to: "/flashcards",
+                    color: "var(--purple)",
+                    bg: "var(--purple-bg)",
+                    btn: "Review",
+                  },
+                ].map((s) => (
+                  <div
+                    key={s.step}
+                    className="flex items-center gap-4 rounded-xl"
+                    style={{ padding: "12px 16px", background: "var(--surface-bg)" }}
+                  >
+                    <div
+                      className="shrink-0 flex items-center justify-center rounded-xl"
+                      style={{ width: 44, height: 44, background: s.bg }}
+                    >
+                      <s.icon size={22} style={{ color: s.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-primary)" }}>
+                        {s.title}
+                      </p>
+                      <p style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)" }}>
+                        {s.desc}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate(s.to)}
+                      className="duo-btn duo-btn-outline shrink-0"
+                      style={{ padding: "6px 16px", fontSize: "12px" }}
+                    >
+                      {s.btn}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </Card>
           ) : (
             <div className="space-y-2">
               {weakTopics.map((topic) => {
