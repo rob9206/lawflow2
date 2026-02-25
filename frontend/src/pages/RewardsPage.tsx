@@ -15,6 +15,15 @@ import {
   TrendingUp,
   Zap,
   Award,
+  GraduationCap,
+  Upload,
+  Brain,
+  BookOpen,
+  Target,
+  Clock,
+  FileText,
+  Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import {
   AreaChart,
@@ -53,6 +62,26 @@ const RARITY_CONFIG: Record<AchievementRarity, {
     badgeClass: "duo-badge duo-badge-gold",
     label: "Legendary",
   },
+};
+
+// ── Achievement icon mapping ────────────────────────────────────
+
+const ACHIEVEMENT_ICONS: Record<string, LucideIcon> = {
+  first_exam: GraduationCap,
+  data_contributor: Upload,
+  getting_started: Flame,
+  perfect_score: Star,
+  exam_machine: Target,
+  memory_palace: Brain,
+  bookworm: BookOpen,
+  night_owl: Clock,
+  early_bird: Sparkles,
+  streak_master: Flame,
+  knowledge_seeker: FileText,
+  quiz_whiz: Zap,
+  study_marathon: Clock,
+  subject_master: Trophy,
+  legal_eagle: GraduationCap,
 };
 
 // ── Activity type labels ───────────────────────────────────────
@@ -256,13 +285,14 @@ function LevelProgressCard({ summary }: { summary: RewardsSummary }) {
 function AchievementCard({ achievement }: { achievement: Achievement }) {
   const rarity = RARITY_CONFIG[achievement.rarity];
   const pct = Math.round(achievement.progress * 100);
+  const AchIcon = ACHIEVEMENT_ICONS[achievement.achievement_key] || Award;
 
   return (
     <div
       className="duo-card p-5 flex flex-col gap-2 relative overflow-hidden transition-all"
       style={{
         borderTopColor: rarity.color,
-        opacity: achievement.unlocked ? 1 : 0.6,
+        opacity: achievement.unlocked ? 1 : 0.65,
       }}
     >
       <div
@@ -271,9 +301,23 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
       />
 
       <div className="flex items-start justify-between">
-        <span style={{ fontSize: "24px" }}>
-          {achievement.unlocked ? "\u2728" : "\u{1F512}"}
-        </span>
+        <div
+          className="flex items-center justify-center rounded-xl"
+          style={{
+            width: 40,
+            height: 40,
+            background: achievement.unlocked
+              ? `color-mix(in srgb, ${rarity.color} 15%, transparent)`
+              : "var(--surface-bg)",
+          }}
+        >
+          <AchIcon
+            size={22}
+            style={{
+              color: achievement.unlocked ? rarity.color : "var(--text-muted)",
+            }}
+          />
+        </div>
         <span className={rarity.badgeClass}>
           {rarity.label}
         </span>
@@ -289,7 +333,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
       </div>
 
       {achievement.unlocked ? (
-        <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-muted)", marginTop: "auto" }}>
+        <p style={{ fontSize: "11px", fontWeight: 600, color: rarity.color, marginTop: "auto" }}>
           Unlocked {formatDate(achievement.unlocked_at)}
         </p>
       ) : (

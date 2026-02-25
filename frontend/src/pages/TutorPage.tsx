@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import { createSession, getSession, sendMessageStream, getModes } from "@/api/tutor";
+import { createSession, getSession, sendMessageStream, getModes, getRecentSessions } from "@/api/tutor";
 import { cleanMarkdown, cn } from "@/lib/utils";
-import { SUBJECTS_SHORT, MODE_LABELS } from "@/lib/constants";
+import { SUBJECTS_SHORT, SUBJECT_LABELS, MODE_LABELS } from "@/lib/constants";
 import Card from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
 import PageHeader from "@/components/ui/PageHeader";
 import SubjectFilter from "@/components/ui/SubjectFilter";
 import {
@@ -17,6 +18,9 @@ import {
   Lightbulb,
   Swords,
   ClipboardCheck,
+  Activity,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import type { SessionMessage } from "@/types";
 
@@ -29,7 +33,17 @@ const MODE_ICONS: Record<string, React.ReactNode> = {
   exam_strategy: <BookOpen size={16} />,
 };
 
+const STUDY_SUGGESTIONS = [
+  { prompt: "Teach me consideration in contracts", subject: "contracts", mode: "explain" },
+  { prompt: "Quiz me on negligence elements", subject: "torts", mode: "socratic" },
+  { prompt: "Walk me through IRAC methodology", subject: "", mode: "irac" },
+  { prompt: "Practice issue spotting with a fact pattern", subject: "", mode: "issue_spot" },
+  { prompt: "Explain the Commerce Clause", subject: "con_law", mode: "explain" },
+  { prompt: "Drill me on hearsay exceptions", subject: "evidence", mode: "hypo" },
+] as const;
+
 export default function TutorPage() {
+  const navigate = useNavigate();
   const { sessionId: paramSessionId } = useParams();
   const [sessionId, setSessionId] = useState<string | null>(paramSessionId ?? null);
   const [selectedMode, setSelectedMode] = useState("explain");
@@ -181,6 +195,41 @@ export default function TutorPage() {
           <button onClick={startSession} className="duo-btn duo-btn-green w-full" style={{ padding: "14px" }}>
             Start Study Session
           </button>
+
+          {/* ── Suggested Prompts ─────────────────────── */}
+          <div className="mt-8">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles size={15} style={{ color: "var(--gold)" }} />
+              <h3 style={{ fontSize: "13px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-secondary)" }}>
+                Try asking
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {STUDY_SUGGESTIONS.map((s) => (
+                <button
+                  key={s.prompt}
+                  onClick={() => {
+                    setSelectedMode(s.mode);
+                    if (s.subject) setSelectedSubject(s.subject);
+                  }}
+                  className="text-left rounded-xl px-3 py-2.5 transition-all"
+                  style={{
+                    background: "var(--surface-bg)",
+                    border: "2px solid var(--border)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  "{s.prompt}"
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Recent Sessions ───────────────────────── */}
+          <RecentSessionsList navigate={navigate} />
         </div>
       </div>
     );
@@ -327,6 +376,53 @@ export default function TutorPage() {
             <Send size={18} />
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RecentSessionsList({ navigate }: { navigate: (path: string) => void }) {
+  const { data: recentSessions = [] } = useQuery({
+    queryKey: ["recent-sessions"],
+    queryFn: () => getRecentSessions(4),
+  });
+
+  if (recentSessions.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center gap-2 mb-3">
+        <Activity size={15} style={{ color: "var(--text-muted)" }} />
+        <h3 style={{ fontSize: "13px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-secondary)" }}>
+          Recent Sessions
+        </h3>
+      </div>
+      <div className="space-y-2">
+        {recentSessions.map((session) => (
+          <button
+            key={session.id}
+            onClick={() => navigate(`/tutor/${session.id}`)}
+            className="w-full flex items-center justify-between text-left transition-colors rounded-xl"
+            style={{
+              padding: "10px 14px",
+              background: "var(--surface-bg)",
+              border: "2px solid var(--border)",
+            }}
+          >
+            <div className="min-w-0">
+              <p style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
+                {MODE_LABELS[session.tutor_mode ?? ""] ?? "Study session"}
+                {session.subject ? ` · ${SUBJECT_LABELS[session.subject] ?? session.subject}` : ""}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant={session.ended_at ? "green" : "blue"}>
+                {session.ended_at ? "done" : "active"}
+              </Badge>
+              <ChevronRight size={14} style={{ color: "var(--text-muted)" }} />
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   Scale,
   Brain,
@@ -15,8 +16,26 @@ import {
 import Card from "@/components/ui/Card";
 import { PRO_DAILY_PRICE, PRO_MONTHLY_PRICE } from "@/constants/pricing";
 
+const HERO_TOPICS = [
+  { topic: "Contract Law", mastery: 75, next: "Consideration in Contracts" },
+  { topic: "Criminal Law", mastery: 62, next: "Mens Rea Elements" },
+  { topic: "Torts", mastery: 88, next: "Proximate Cause Analysis" },
+  { topic: "Con Law", mastery: 54, next: "Commerce Clause Limits" },
+  { topic: "Evidence", mastery: 41, next: "Hearsay Exceptions" },
+] as const;
+
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % HERO_TOPICS.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentHero = HERO_TOPICS[heroIndex];
 
   const handleGetStarted = () => {
     navigate("/dashboard");
@@ -102,7 +121,7 @@ export default function LandingPage() {
                   }}
                 />
 
-                {/* Mock Study Session Card */}
+                {/* Animated Study Session Card */}
                 <Card
                   padding="none"
                   className="relative overflow-hidden"
@@ -120,18 +139,24 @@ export default function LandingPage() {
                       </span>
                     </div>
 
-                    {/* Content Simulation */}
+                    {/* Animated Content */}
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <p style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>Topic: Contract Law</p>
+                      <div className="space-y-2" key={heroIndex} style={{ animation: "fadeUp 0.4s ease both" }}>
+                        <p style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
+                          Topic: {currentHero.topic}
+                        </p>
                         <div className="duo-progress-track">
                           <div
                             className="duo-progress-fill"
-                            style={{ width: "75%", backgroundColor: "var(--green)" }}
+                            style={{
+                              width: `${currentHero.mastery}%`,
+                              backgroundColor: "var(--green)",
+                              transition: "width 0.6s ease",
+                            }}
                           />
                         </div>
                         <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-muted)" }}>
-                          75% mastery
+                          {currentHero.mastery}% mastery
                         </p>
                       </div>
 
@@ -140,17 +165,19 @@ export default function LandingPage() {
                           Next Concept:
                         </p>
                         <div
+                          key={`next-${heroIndex}`}
                           className="flex items-start gap-3 p-3"
                           style={{
                             borderRadius: "var(--radius-sm)",
                             backgroundColor: "var(--green-bg)",
                             border: "2px solid var(--green-bg)",
+                            animation: "fadeUp 0.4s ease 0.1s both",
                           }}
                         >
                           <Brain className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: "var(--green)" }} />
                           <div>
                             <p style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
-                              Consideration in Contracts
+                              {currentHero.next}
                             </p>
                             <p style={{ fontSize: "13px", fontWeight: 500, marginTop: "4px", color: "var(--text-muted)" }}>
                               Adaptive difficulty based on your level
@@ -159,9 +186,24 @@ export default function LandingPage() {
                         </div>
                       </div>
 
+                      {/* Topic dots indicator */}
+                      <div className="flex items-center justify-center gap-1.5 pt-2">
+                        {HERO_TOPICS.map((_, i) => (
+                          <div
+                            key={i}
+                            className="rounded-full transition-all"
+                            style={{
+                              width: i === heroIndex ? 20 : 6,
+                              height: 6,
+                              backgroundColor: i === heroIndex ? "var(--green)" : "var(--border)",
+                            }}
+                          />
+                        ))}
+                      </div>
+
                       <button
                         className="duo-btn duo-btn-outline w-full"
-                        style={{ marginTop: "16px" }}
+                        style={{ marginTop: "8px" }}
                       >
                         Continue Session
                       </button>
