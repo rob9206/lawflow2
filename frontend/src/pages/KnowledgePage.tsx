@@ -1,14 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type { KnowledgeChunk } from "@/types";
-import { Search, FileText, Tag } from "lucide-react";
+import { Search, FileText, Tag, Upload, Brain, Sparkles, BookOpen, ArrowRight } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import EmptyState from "@/components/ui/EmptyState";
 
 export default function KnowledgePage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [subject, setSubject] = useState("");
   const [contentType, setContentType] = useState("");
@@ -83,13 +84,55 @@ export default function KnowledgePage() {
       </div>
 
       {isLoading ? (
-        <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text-muted)" }}>Searching...</div>
+        <div className="flex items-center justify-center gap-2 py-12">
+          <Search size={16} className="animate-spin" style={{ color: "var(--blue)" }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-muted)" }}>Searching...</span>
+        </div>
       ) : chunks.length === 0 ? (
-        <EmptyState
-          icon={<FileText size={40} />}
-          message="No knowledge chunks found."
-          sub="Upload documents to build your knowledge base."
-        />
+        <Card padding="lg" className="text-center animate-fade-up" style={{ maxWidth: 520, margin: "0 auto" }}>
+          <div
+            className="mx-auto mb-4 flex items-center justify-center rounded-full"
+            style={{ width: 72, height: 72, background: "var(--purple-bg)" }}
+          >
+            <Brain size={36} style={{ color: "var(--purple)" }} />
+          </div>
+          <p style={{ fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
+            Your knowledge base is empty
+          </p>
+          <p
+            style={{
+              fontSize: "14px",
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+              lineHeight: 1.6,
+              marginBottom: 20,
+            }}
+          >
+            When you upload documents, LawFlow's AI extracts every rule, case holding, concept, and definition into searchable knowledge chunks.
+            These power your tutoring sessions, flashcards, and exam prep.
+          </p>
+          <div className="flex items-center justify-center gap-4 mb-5">
+            {[
+              { icon: FileText, label: "Rules", color: "var(--blue)" },
+              { icon: BookOpen, label: "Cases", color: "var(--green)" },
+              { icon: Sparkles, label: "Concepts", color: "var(--purple)" },
+              { icon: Tag, label: "Definitions", color: "var(--orange)" },
+            ].map((t) => (
+              <div key={t.label} className="flex items-center gap-1.5">
+                <t.icon size={13} style={{ color: t.color }} />
+                <span style={{ fontSize: "12px", fontWeight: 700, color: t.color }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => navigate("/documents")}
+            className="duo-btn duo-btn-green flex items-center gap-2 mx-auto"
+          >
+            <Upload size={16} />
+            Upload Documents
+            <ArrowRight size={16} />
+          </button>
+        </Card>
       ) : (
         <div className="space-y-3">
           {chunks.map((chunk) => (

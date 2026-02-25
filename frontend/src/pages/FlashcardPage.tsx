@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getDueCards,
@@ -27,10 +28,10 @@ import Card from "@/components/ui/Card";
 import StatCard from "@/components/ui/StatCard";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
-import EmptyState from "@/components/ui/EmptyState";
 import SubjectFilter from "@/components/ui/SubjectFilter";
 
 export default function FlashcardPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fireRewardToast = useRewardToast();
   const [selectedSubject, setSelectedSubject] = useState("");
@@ -168,27 +169,59 @@ export default function FlashcardPage() {
           generating={generating}
         />
       ) : dueCards.length === 0 ? (
-        <EmptyState
-          icon={<BookOpen size={40} />}
-          message="No cards due for review"
-          sub={
-            selectedSubject
-              ? "Great work! Generate more cards from your knowledge base."
-              : "Select a subject and generate cards from your uploaded documents."
-          }
-          action={
-            selectedSubject ? (
-              <button
-                onClick={handleGenerate}
-                disabled={generating}
-                className="duo-btn duo-btn-green flex items-center gap-2 mx-auto"
-              >
-                {generating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                {generating ? "Generating…" : "Generate Flashcards"}
-              </button>
-            ) : undefined
-          }
-        />
+        <Card padding="lg" className="text-center animate-fade-up" style={{ maxWidth: 480, margin: "0 auto" }}>
+          <div
+            className="mx-auto mb-4 flex items-center justify-center rounded-full"
+            style={{ width: 72, height: 72, background: "var(--blue-bg)" }}
+          >
+            <CreditCard size={36} style={{ color: "var(--blue)" }} />
+          </div>
+          <p style={{ fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
+            {selectedSubject ? "All caught up!" : "No flashcards yet"}
+          </p>
+          <p
+            style={{
+              fontSize: "14px",
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+              lineHeight: 1.6,
+              marginBottom: 20,
+            }}
+          >
+            {selectedSubject
+              ? "Great work! You've reviewed all due cards. Generate more to keep studying."
+              : "Flashcards are auto-generated from your uploaded documents. Upload a casebook, outline, or lecture slides, then select a subject above to generate cards."}
+          </p>
+          <div className="flex items-center justify-center gap-3 mb-5">
+            {[
+              { icon: Brain, label: "SM-2 Spaced Repetition", color: "var(--purple)" },
+              { icon: Sparkles, label: "AI-Generated", color: "var(--green)" },
+            ].map((f) => (
+              <div key={f.label} className="flex items-center gap-1.5">
+                <f.icon size={13} style={{ color: f.color }} />
+                <span style={{ fontSize: "12px", fontWeight: 700, color: f.color }}>{f.label}</span>
+              </div>
+            ))}
+          </div>
+          {selectedSubject ? (
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="duo-btn duo-btn-green flex items-center gap-2 mx-auto"
+            >
+              {generating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+              {generating ? "Generating…" : "Generate Flashcards"}
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/documents")}
+              className="duo-btn duo-btn-blue flex items-center gap-2 mx-auto"
+            >
+              <BookOpen size={16} />
+              Upload Documents First
+            </button>
+          )}
+        </Card>
       ) : (
         currentCard && (
           <div className="space-y-4">
